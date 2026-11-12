@@ -1,4 +1,4 @@
-# 三段日程 0.1.0 Demo
+# ModuPlan · 三段日程 0.1.1
 
 一个独立 Flutter Android 日程 App。每天固定三个可编辑模块，适合大学生记录学习、生活和共同活动。默认空白启动，所有业务功能完全离线。归属「我／对象／一起」只是本机标签，没有账号、配对或跨设备同步。
 
@@ -21,7 +21,7 @@ Debug/Profile 保留 Flutter 标准调试器所需的 INTERNET 权限，仅用�
 | --- | --- |
 | 工程名 | `day_blocks_demo` |
 | Android 包名 / applicationId | `cn.bingbing.day_blocks_demo` |
-| App 版本 | `0.1.0+1`（versionName 0.1.0 / versionCode 1） |
+| App 版本 | `0.1.1+2`（versionName 0.1.1 / versionCode 2） |
 | Flutter | 3.35.7 stable，revision adc9010625 |
 | Dart | 3.9.2 |
 | JDK | Eclipse Temurin OpenJDK 21.0.13+9（完整 JDK） |
@@ -56,19 +56,19 @@ flutter test --reporter expanded
 flutter build apk --debug
 ```
 
-产物：`build/app/outputs/flutter-apk/app-debug.apk`。默认构建为通用 APK；未使用 ABI 拆包。Linux 运行数据库测试需要系统 `libsqlite3`（Ubuntu 可安装 `libsqlite3-dev`）。云端此次系统仅提供 `libsqlite3.so.0`，使用工具目录内指向该库的链接补齐动态库名称，通过 `LD_LIBRARY_PATH` 加载真实 SQLite。
+产物：`build/app/outputs/flutter-apk/app-debug.apk`，通用 APK，未拆分 ABI。Linux 数据库测试需要 `libsqlite3-dev`。
 
-云端 Java 构建必须将当前会话 HTTP/HTTPS 代理传给 Gradle 系统属性；此次替换了过期的 `GRADLE_OPTS` 代理地址，同时让新 JDK 使用运行环境提供的系统 CA 信任库，保持代理与 TLS 校验，没有绕过网络策略。该配置属于本次会话，未写入工程。使用 `CI=true` 跳过 Flutter 官方 CLI 的云主机环境探测，关闭工具统计。
+GitHub 工作流 `.github/workflows/android-debug.yml` 在 `main` 推送、Pull Request 和手动触发时运行分析、SQLite/界面测试和 APK 构建。成功后在 Actions 的 Artifacts 中下载 `ModuPlan-0.1.1-debug`，包含 APK、版本/包名信息、签名摘要及 SHA-256 校验文件，保留 30 天。连续推送会取消旧任务，只检查最新提交。
 
-`.github/workflows/android-debug.yml` 可在将本工程根目录推入你授权的 GitHub 仓库后构建、分析、测试并保存 APK。本轮未连接或触发任何 GitHub 仓库。
+0.1.1 使用「纸间」手帐风格：暖色纸页、书脊与浅横线、连续曲率卡片、书签式底栏、日期双向卷页动效。可轻扫或点「前一天／后一天」翻页；系统减少动态效果设置会关闭翻页及表单过渡。原有 SQLite 表、备份版本、包名和业务规则不变。版本说明见 [0.1.1](docs/version-0.1.1.md)。
 
 架构与数据约束详见 `docs/architecture.md`。业务代码位于 `lib/data/` 和 `lib/ui/`；Android 文件选择器位于 `android/app/src/main/kotlin/cn/bingbing/day_blocks_demo/MainActivity.kt`。修改数据库结构时增加 schema version 并补充迁移测试。正式发布应自行配置受保护的 release 签名，不能沿用 Debug 签名。
 
 ## 验证与限制
 
-- 核心数据测试 17 项通过：真实 SQLite 新增、修改、删除、完成、取消完成、移动、重开持久化；模块边界与快照；模板复制与重复应用；空日期已建立标记；完成隔离；跨月跨年；备份校验与事务回滚。
-- 界面测试 3 项通过：320×640 小屏四页浏览、键盘遮挡与系统返回；新增、完成、取消及筛选一致性；长标题、长昵称与 1.3 倍字体布局。
-- `flutter analyze` 无问题，通用 Debug APK 已实际构建且签名校验通过。**已编译，尚未做设备运行验证**：云端软件模拟器系统卡死、安装超时并退出，没有 App 实际运行截图；飞行模式、系统文件选择器和真机操作未验证。详见 `docs/verification.md`。
+- 数据回归测试覆盖真实 SQLite、持久化、模块快照、模板、备份校验与回滚；界面回归覆盖小屏、键盘返回、完成/筛选、长标题及字体放大。0.1.1 额外覆盖翻页、快速连续切换及减少动态效果。以对应提交的 GitHub Actions 结果为准。
+- 云端 APK 构建、签名校验与测试不能代替真机验收。需要在实际 Android 设备继续确认翻页帧率、系统文件选择器、离线恢复及已有数据升级。
+- 当前仍是 Debug 测试包。GitHub 托管运行器可能重新生成测试签名；不能保证与 0.1.0 安装包直接覆盖升级。安装前先从现有 App 导出 JSON 备份，若签名冲突应保留旧 App 和数据，核对原签名后再处理。
 - 第一版仅单机；不含账号、云同步、聊天、通知、AI、OCR 或无限重复事件。
 - 日期选择范围 1900—2100 年；完整备份上限 10 MiB，每类记录最多 50000。数据未做应用层加密，受 Android 应用沙盒保护；JSON 备份为明文。
 - 已建立的日期即使清空事项也不会再次套用模板。如需修改该日，应手动添加或调整；仅「清空全部数据」重置所有建立标记。

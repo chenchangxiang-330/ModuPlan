@@ -6,9 +6,13 @@ on:
   pull_request:
 permissions:
   contents: read
+concurrency:
+  group: android-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     env:
       CI: 'true'
       FLUTTER_SUPPRESS_ANALYTICS: 'true'
@@ -20,19 +24,43 @@ jobs:
           distribution: temurin
           java-version: '21'
       - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.35.7'
           channel: stable
           cache: true
-      - run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev
+      - run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev fonts-noto-cjk
       - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0' 'build-tools;35.0.0' 'ndk;27.0.12077973' 'cmake;3.22.1'
       - run: flutter pub get --enforce-lockfile
-      - run: flutter analyze
-      - run: flutter test --reporter expanded
-      - run: flutter build apk --debug
+      - name: Analyze
+        run: flutter analyze
+      - name: Test offline behavior and UI
+        run: flutter test --reporter expanded
+      - name: Capture UI review images
+        run: flutter test test/preview_test.dart --dart-define=PREVIEW_FONT_DIR=/usr/share/fonts/opentype/noto --reporter expanded
       - uses: actions/upload-artifact@v4
         with:
-          name: day-blocks-demo-0.1.0-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
-          retention-days: 14
+          name: ModuPlan-ui-review
+          path: build/previews/
+          if-no-files-found: error
+          retention-days: 30
+      - name: Build debug APK
+        run: flutter build apk --debug
+      - name: Package versioned APK and metadata
+        shell: bash
+        run: |
+          VERSION=$(sed -n 's/^version: //p' pubspec.yaml)
+          mkdir -p build/delivery
+          cp build/app/outputs/flutter-apk/app-debug.apk "build/delivery/ModuPlan-${VERSION%%+*}-debug.apk"
+          "$ANDROID_HOME/build-tools/36.0.0/aapt" dump badging build/app/outputs/flutter-apk/app-debug.apk > build/delivery/apk-info.txt
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs build/app/outputs/flutter-apk/app-debug.apk > build/delivery/signature.txt
+          (cd build/delivery && sha256sum ./*.apk > SHA256SUMS)
+          echo "artifact_name=ModuPlan-${VERSION%%+*}-debug" >> "$GITHUB_ENV"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.artifact_name }}
+          path: build/delivery/
+          if-no-files-found: error
+          retention-days: 30

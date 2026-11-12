@@ -1,7 +1,7 @@
 name: day_blocks_demo
 description: 三段日程：单机离线的三段式日程 Demo。
 publish_to: none
-version: 0.1.0+1
+version: 0.1.1+2
 environment:
   sdk: '>=3.9.0 <4.0.0'
 dependencies:

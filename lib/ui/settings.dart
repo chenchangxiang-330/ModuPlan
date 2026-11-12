@@ -139,7 +139,15 @@ class _SettingsPageState extends State<SettingsPage> {
     bool danger = false,
   }) => ListTile(
     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-    leading: Icon(icon, color: danger ? const Color(0xffa5483e) : green),
+    leading: Container(
+      width: 40,
+      height: 40,
+      decoration: ShapeDecoration(
+        color: danger ? const Color(0xfff5e9df) : const Color(0xffeaeede),
+        shape: notebookControlShape,
+      ),
+      child: Icon(icon, color: danger ? const Color(0xffa5483e) : green, size: 21),
+    ),
     title: Text(
       title,
       style: TextStyle(
@@ -149,9 +157,9 @@ class _SettingsPageState extends State<SettingsPage> {
     ),
     subtitle: Padding(
       padding: const EdgeInsets.only(top: 5),
-      child: Text(subtitle, style: const TextStyle(fontSize: 12, height: 1.5)),
+      child: Text(subtitle, style: const TextStyle(fontSize: 13, height: 1.5)),
     ),
-    trailing: const Icon(Icons.chevron_right, size: 20),
+    trailing: const Icon(Icons.chevron_right, size: 18, color: Color(0xff8a8877)),
     onTap: busy ? null : onTap,
   );
   @override
@@ -165,9 +173,12 @@ class _SettingsPageState extends State<SettingsPage> {
       Container(
         margin: const EdgeInsets.symmetric(horizontal: 20),
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: const Color(0xffe5ede4),
-          borderRadius: BorderRadius.circular(22),
+        decoration: const ShapeDecoration(
+          color: Color(0xffeaeede),
+          shape: ContinuousRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(32)),
+            side: BorderSide(color: Color(0xffd5dcc5)),
+          ),
         ),
         child: const Row(
           children: [
@@ -184,7 +195,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   SizedBox(height: 6),
                   Text(
                     '数据保存在本机。没有账号、配对或跨设备同步。',
-                    style: TextStyle(fontSize: 12, color: green, height: 1.5),
+                    style: TextStyle(fontSize: 13, color: green, height: 1.5),
                   ),
                 ],
               ),
@@ -192,7 +203,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
-      const SizedBox(height: 18),
+      const _SettingsSectionLabel('日常偏好'),
       Card(
         margin: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -221,7 +232,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
-      const SizedBox(height: 18),
+      const _SettingsSectionLabel('数据与备份'),
       Card(
         margin: const EdgeInsets.symmetric(horizontal: 20),
         child: Column(
@@ -261,12 +272,31 @@ class _SettingsPageState extends State<SettingsPage> {
       const Padding(
         padding: EdgeInsets.all(28),
         child: Text(
-          '三段日程  0.1.0 Demo\n今天的事，一段一段来。',
+          'ModuPlan  0.1.1 · 纸间\n今天的事，一段一段来。',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 12, color: Color(0xff7b8479), height: 1.9),
+          style: TextStyle(fontSize: 12, color: Color(0xff78766a), height: 1.9),
         ),
       ),
     ],
+  );
+}
+
+class _SettingsSectionLabel extends StatelessWidget {
+  final String text;
+  const _SettingsSectionLabel(this.text);
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(24, 24, 20, 10),
+    child: Text(
+      text,
+      style: const TextStyle(
+        color: green,
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        letterSpacing: 1,
+      ),
+    ),
   );
 }
 
@@ -361,111 +391,116 @@ class _BlocksSettingsPageState extends State<BlocksSettingsPage> {
   @override
   Widget build(BuildContext context) => Scaffold(
     appBar: AppBar(title: const Text('默认三段模块')),
-    body: ListView(
-      padding: const EdgeInsets.all(20),
-      children: [
-        const Text(
-          '修改只影响之后新建立的日期。已建立日期保留原模块快照；周模板中的定时事项必须仍在新时间范围内。',
-          style: TextStyle(color: green, height: 1.6),
-        ),
-        const SizedBox(height: 18),
-        for (var i = 0; i < 3; i++)
-          Container(
-            margin: const EdgeInsets.only(bottom: 16),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Color(blocks[i].color),
-              borderRadius: BorderRadius.circular(22),
-            ),
-            child: Column(
-              children: [
-                TextField(
-                  controller: names[i],
-                  maxLength: 16,
-                  decoration: InputDecoration(
-                    labelText: '模块 ${i + 1} 名称',
-                    fillColor: Colors.white,
+    body: NotebookPaper(
+      child: ListView(
+        padding: const EdgeInsets.all(20),
+        children: [
+          const Text(
+            '修改只影响之后新建立的日期。已建立日期保留原模块快照；周模板中的定时事项必须仍在新时间范围内。',
+            style: TextStyle(color: green, height: 1.6),
+          ),
+          const SizedBox(height: 18),
+          for (var i = 0; i < 3; i++)
+            Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: ShapeDecoration(
+                color: Color.lerp(paperSurface, Color(blocks[i].color), .32),
+                shape: const ContinuousRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(32)),
+                  side: BorderSide(color: notebookLine),
+                ),
+              ),
+              child: Column(
+                children: [
+                  TextField(
+                    controller: names[i],
+                    maxLength: 16,
+                    decoration: InputDecoration(
+                      labelText: '模块 ${i + 1} 名称',
+                      fillColor: Colors.white,
+                    ),
                   ),
-                ),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: busy ? null : () => time(i, true),
-                        child: Text('开始 ${timeText(blocks[i].start)}'),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: busy ? null : () => time(i, false),
-                        child: Text('结束 ${timeText(blocks[i].end)}'),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (var c = 0; c < blockColors.length; c++)
-                      Semantics(
-                        label: '配色 ${c + 1}',
-                        selected: blocks[i].color == blockColors[c],
-                        child: InkWell(
-                          onTap: busy
-                              ? null
-                              : () => setState(
-                                  () => blocks[i] = BlockSpec(
-                                    blocks[i].name,
-                                    blocks[i].start,
-                                    blocks[i].end,
-                                    blockColors[c],
-                                  ),
-                                ),
-                          borderRadius: BorderRadius.circular(24),
-                          child: Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Color(blockColors[c]),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: blocks[i].color == blockColors[c]
-                                    ? ink
-                                    : Colors.white,
-                                width: 2,
-                              ),
-                            ),
-                            child: blocks[i].color == blockColors[c]
-                                ? const Icon(Icons.check, color: ink, size: 18)
-                                : null,
-                          ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: busy ? null : () => time(i, true),
+                          child: Text('开始 ${timeText(blocks[i].start)}'),
                         ),
                       ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        if (error != null)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 16),
-            child: Text(
-              error!,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.error,
-                height: 1.6,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: busy ? null : () => time(i, false),
+                          child: Text('结束 ${timeText(blocks[i].end)}'),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (var c = 0; c < blockColors.length; c++)
+                        Semantics(
+                          label: '配色 ${c + 1}',
+                          selected: blocks[i].color == blockColors[c],
+                          child: InkWell(
+                            onTap: busy
+                                ? null
+                                : () => setState(
+                                    () => blocks[i] = BlockSpec(
+                                      blocks[i].name,
+                                      blocks[i].start,
+                                      blocks[i].end,
+                                      blockColors[c],
+                                    ),
+                                  ),
+                            borderRadius: BorderRadius.circular(24),
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: BoxDecoration(
+                                color: Color(blockColors[c]),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: blocks[i].color == blockColors[c]
+                                      ? ink
+                                      : Colors.white,
+                                  width: 2,
+                                ),
+                              ),
+                              child: blocks[i].color == blockColors[c]
+                                  ? const Icon(Icons.check, color: ink, size: 18)
+                                  : null,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ],
               ),
             ),
+          if (error != null)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 16),
+              child: Text(
+                error!,
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.error,
+                  height: 1.6,
+                ),
+              ),
+            ),
+          FilledButton(
+            onPressed: busy ? null : save,
+            child: Text(busy ? '保存中…' : '保存默认模块'),
           ),
-        FilledButton(
-          onPressed: busy ? null : save,
-          child: Text(busy ? '保存中…' : '保存默认模块'),
-        ),
-        const SizedBox(height: 24),
-      ],
+          const SizedBox(height: 24),
+        ],
+      ),
     ),
   );
 }

@@ -18,14 +18,29 @@ Future<void> editEntry(
   isScrollControlled: true,
   useSafeArea: true,
   backgroundColor: paper,
-  builder: (_) => EntryEditor(
-    store: store,
-    settings: settings,
-    date: date,
-    block: block,
-    entry: entry,
-    weekday: weekday,
-    rank: rank,
+  barrierColor: const Color(0x6655463c),
+  clipBehavior: Clip.antiAlias,
+  shape: const ContinuousRectangleBorder(
+    borderRadius: BorderRadius.vertical(top: Radius.circular(40)),
+    side: BorderSide(color: Color(0xffe0dbcd)),
+  ),
+  constraints: const BoxConstraints(maxWidth: 640),
+  sheetAnimationStyle: MediaQuery.disableAnimationsOf(context)
+      ? AnimationStyle.noAnimation
+      : const AnimationStyle(
+          duration: Duration(milliseconds: 380),
+          reverseDuration: Duration(milliseconds: 260),
+        ),
+  builder: (_) => NotebookPaper(
+    child: EntryEditor(
+      store: store,
+      settings: settings,
+      date: date,
+      block: block,
+      entry: entry,
+      weekday: weekday,
+      rank: rank,
+    ),
   ),
 );
 
@@ -213,7 +228,7 @@ class _EntryEditorState extends State<EntryEditor> {
               MediaQuery.viewInsetsOf(context).bottom,
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 12, 24, 28),
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -223,12 +238,21 @@ class _EntryEditorState extends State<EntryEditor> {
                   width: 34,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: const Color(0xffcfd6cc),
+                    color: const Color(0xffc8c2af),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
               ),
-              const SizedBox(height: 18),
+              const SizedBox(height: 20),
+              Text(
+                template ? '周复一周的小习惯' : '留一页给今天',
+                style: const TextStyle(
+                  color: green,
+                  fontSize: 12,
+                  letterSpacing: 1,
+                ),
+              ),
+              const SizedBox(height: 6),
               Row(
                 children: [
                   Expanded(
@@ -238,7 +262,8 @@ class _EntryEditorState extends State<EntryEditor> {
                           : '编辑事项',
                       style: const TextStyle(
                         fontSize: 24,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w600,
+                        height: 1.3,
                       ),
                     ),
                   ),
@@ -264,8 +289,13 @@ class _EntryEditorState extends State<EntryEditor> {
               const SizedBox(height: 12),
               if (!template)
                 ListTile(
-                  contentPadding: EdgeInsets.zero,
-                  leading: const Icon(Icons.calendar_today_outlined),
+                  contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+                  shape: notebookControlShape,
+                  tileColor: const Color(0xffefeee3),
+                  leading: const Icon(
+                    Icons.calendar_today_outlined,
+                    color: green,
+                  ),
                   title: Text(friendlyDate(date)),
                   subtitle: const Text('更改日期可移动事项'),
                   trailing: const Icon(Icons.expand_more),
@@ -321,7 +351,10 @@ class _EntryEditorState extends State<EntryEditor> {
                 children: [
                   for (final o in ['me', 'partner', 'both'])
                     ChoiceChip(
-                      label: Text(widget.settings.ownerLabel(o)),
+                      label: Text(
+                        widget.settings.ownerLabel(o),
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       selected: owner == o,
                       onSelected: saving
                           ? null
