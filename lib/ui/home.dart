@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import '../data/models.dart';
 import '../data/store.dart';
 import 'common.dart';
@@ -58,6 +59,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       if (mounted && seq == generation) {
         setState(() {
           settings = s;
+          if (day != null && day!.day != d.day) {
+            turnDirection = d.day.compareTo(day!.day) < 0 ? -1 : 1;
+          }
           day = d;
           days = w;
           counts = c;
@@ -418,14 +422,20 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
               label: const Text('编辑周模板'),
             ),
             FilledButton.icon(
-              onPressed: applying ? null : apply,
+              onPressed: applying || plusDays(week, 6).year > 2100 ? null : apply,
               icon: const Icon(Icons.playlist_add, size: 18),
               label: Text(applying ? '应用中…' : '应用模板到这一周'),
             ),
           ],
         ),
       ),
-      for (final d in days)
+      if (plusDays(week, 6).year > 2100)
+        const Padding(
+          padding: EdgeInsets.fromLTRB(20, 0, 20, 16),
+          child: Text('已到支持的日期边界，跨范围周不可应用模板。',
+            style: TextStyle(color: green, height: 1.5)),
+        ),
+      for (final d in days.where((d) => d.day.compareTo('2100-12-31') <= 0))
         Card(
           margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
           child: InkWell(
@@ -677,6 +687,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Widget bookContent() => switch (tab) {
     0 => GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onHorizontalDragStart: (_) => dragDistance = 0,
       onHorizontalDragUpdate: (details) => dragDistance += details.delta.dx,
       onHorizontalDragEnd: (details) {
@@ -705,7 +716,15 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   };
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => AnnotatedRegion<SystemUiOverlayStyle>(
+    value: const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+      statusBarBrightness: Brightness.dark,
+      systemNavigationBarColor: cover,
+      systemNavigationBarIconBrightness: Brightness.light,
+    ),
+    child: Scaffold(
     backgroundColor: cover,
     body: SafeArea(
       bottom: false,
@@ -767,6 +786,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         ),
         NavigationDestination(icon: Icon(Icons.tune), label: '设置'),
       ],
+    ),
     ),
   );
 }

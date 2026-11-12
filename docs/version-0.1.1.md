@@ -18,6 +18,8 @@
 
 GitHub Actions 安装明确的 Android SDK 包，避开已移除的 `tools` 包，执行 `flutter analyze`、`flutter test` 和通用 Debug APK 构建，导出 APK 元信息、签名与 SHA-256。后续修改通过 Pull Request 触发同一流程。
 
+CI 页面截图仅在测试中装载 Noto 中文字体与 Material 图标字体，不包含设备系统栏；APK 使用系统字体，实机字形可能不同。
+
 真实设备的安装升级、备份文件选择器和动画流畅度仍需验收；云端结果不能代表真机通过。Debug 签名可能与旧包不同，覆盖升级前须核对证书，不应通过卸载丢弃原数据。
 
 ## 实现参考

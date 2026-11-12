@@ -6,6 +6,7 @@ import 'package:day_blocks_demo/main.dart';
 import 'package:day_blocks_demo/data/models.dart';
 import 'package:day_blocks_demo/data/store.dart';
 import 'package:day_blocks_demo/ui/entry_editor.dart';
+import 'package:day_blocks_demo/ui/page_turn.dart';
 
 void main() {
   sqfliteFfiInit();
@@ -142,6 +143,30 @@ void main() {
     expect(t.takeException(), isNull);
     await t.tap(find.widgetWithText(NavigationDestination, '月历'));
     await settle(t);
+    expect(t.takeException(), isNull);
+    await t.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('连续轻扫可中断翻页，最终日期与最后一次手势一致', (t) async {
+    final today = dateOnly(DateTime.now());
+    await t.pumpWidget(DayBlocksApp(store: store));
+    await settle(t);
+    await t.drag(find.byType(NotebookPageTurn), const Offset(-140, 0));
+    final curl = find.byKey(const ValueKey('notebook.pageTurn.overlay'));
+    for (var i = 0; i < 30 && curl.evaluate().isEmpty; i++) {
+      await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 25)));
+      await t.pump();
+    }
+    expect(curl, findsOneWidget);
+    await t.drag(find.byType(NotebookPageTurn), const Offset(140, 0));
+    await settle(t);
+    expect(find.text('${today.month}月${today.day}日'), findsOneWidget);
+    await t.drag(find.byType(NotebookPageTurn), const Offset(-140, 0));
+    await t.drag(find.byType(NotebookPageTurn), const Offset(-140, 0));
+    await settle(t);
+    final target = plusDays(today, 2);
+    expect(find.text('${target.month}月${target.day}日'), findsOneWidget);
+    expect(await t.runAsync(() => store.db.query('days')), isEmpty);
     expect(t.takeException(), isNull);
     await t.pumpWidget(const SizedBox.shrink());
   });

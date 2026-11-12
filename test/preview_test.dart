@@ -19,6 +19,7 @@ void main() {
     await t.runAsync(() async {
       for (final font in {
         'Roboto': 'NotoSansCJK-Regular.ttc',
+        'Ahem': 'NotoSansCJK-Regular.ttc',
         'serif': 'NotoSerifCJK-Regular.ttc',
       }.entries) {
         final loader = FontLoader(font.key);
@@ -26,6 +27,9 @@ void main() {
         loader.addFont(Future.value(ByteData.sublistView(bytes)));
         await loader.load();
       }
+      final icons = FontLoader('MaterialIcons')
+        ..addFont(rootBundle.load('fonts/MaterialIcons-Regular.otf'));
+      await icons.load();
       folder = await Directory.systemTemp.createTemp('moduplan_preview_');
       store = await LedgerStore.open(
         factory: databaseFactoryFfi, path: '${folder.path}/preview.sqlite',
@@ -72,6 +76,18 @@ void main() {
       await t.pumpWidget(RepaintBoundary(key: boundary, child: DayBlocksApp(store: store)));
       await settle();
       await capture('01-schedule');
+      await t.tap(find.byTooltip('后一天'));
+      final curl = find.byKey(const ValueKey('notebook.pageTurn.overlay'));
+      for (var i = 0; i < 30 && curl.evaluate().isEmpty; i++) {
+        await t.runAsync(() => Future<void>.delayed(const Duration(milliseconds: 25)));
+        await t.pump();
+      }
+      expect(curl, findsOneWidget);
+      await t.pump(const Duration(milliseconds: 280));
+      await capture('06-page-turn');
+      await settle();
+      await t.tap(find.byTooltip('前一天'));
+      await settle();
       for (final target in [('周计划', '02-week'), ('月历', '03-month'), ('设置', '04-settings')]) {
         await t.tap(find.widgetWithText(NavigationDestination, target.$1));
         await settle();
