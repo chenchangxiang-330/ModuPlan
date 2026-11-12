@@ -125,7 +125,7 @@ class DayBlocksApp extends StatelessWidget {
         side: BorderSide(color: notebookLine),
         backgroundColor: paperSurface,
         selectedColor: Color(0xffe6ead8),
-        labelStyle: TextStyle(color: green, fontSize: 13),
+        labelStyle: TextStyle(fontFamily: 'Roboto', color: green, fontSize: 13),
       ),
       dividerTheme: const DividerThemeData(color: notebookLine, thickness: .7),
       filledButtonTheme: FilledButtonThemeData(

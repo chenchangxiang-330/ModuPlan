@@ -257,14 +257,32 @@ class _CurledPagePainter extends CustomPainter {
         final u0 = (direction > 0 ? i / strips : 1 - i / strips) * image.width;
         final u1 = (direction > 0 ? (i + 1) / strips : 1 - (i + 1) / strips) *
             image.width;
-        final v1 = image.height.toDouble();
+        // drawVertices interpolates texture coordinates affinely inside each
+        // triangle. A full-height pair of triangles makes horizontal rules and
+        // text zigzag at every strip because the two sides have different
+        // perspective scales. Short, shared-edge mesh cells bound that error.
+        const rows = 16;
+        final positions = <Offset>[];
+        final textureCoordinates = <Offset>[];
+        final indices = <int>[];
+        for (var row = 0; row <= rows; row++) {
+          final fraction = row / rows;
+          final v = image.height * fraction;
+          positions.addAll([
+            Offset.lerp(top[i], bottom[i], fraction)!,
+            Offset.lerp(top[i + 1], bottom[i + 1], fraction)!,
+          ]);
+          textureCoordinates.addAll([Offset(u0, v), Offset(u1, v)]);
+          if (row < rows) {
+            final a = row * 2;
+            indices.addAll([a, a + 1, a + 3, a, a + 3, a + 2]);
+          }
+        }
         final vertices = ui.Vertices(
           ui.VertexMode.triangles,
-          [corners[0], corners[1], corners[2], corners[0], corners[2], corners[3]],
-          textureCoordinates: [
-            Offset(u0, 0), Offset(u1, 0), Offset(u1, v1),
-            Offset(u0, 0), Offset(u1, v1), Offset(u0, v1),
-          ],
+          positions,
+          textureCoordinates: textureCoordinates,
+          indices: indices,
         );
         canvas.drawVertices(vertices, BlendMode.srcOver, texturePaint);
         vertices.dispose();
