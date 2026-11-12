@@ -1,0 +1,22 @@
+{
+  "file_name": "day_blocks_demo-0.1.0-debug-universal.apk",
+  "size_bytes": 144538954,
+  "size_mib": 137.84,
+  "sha256": "b5c916bf634aba83fa75e2ff65bbe2898b1b7995129c39c718eb2bb230346b2f",
+  "application_id": "cn.bingbing.day_blocks_demo",
+  "version_name": "0.1.0",
+  "version_code": 1,
+  "build_type": "debug",
+  "minimum_sdk": 24,
+  "target_sdk": 36,
+  "abis": [
+    "arm64-v8a",
+    "armeabi-v7a",
+    "x86_64"
+  ],
+  "signature": "Android Debug / APK Signature Scheme v2",
+  "network_permission": true,
+  "build_command": "flutter build apk --debug",
+  "network_permission_purpose": "Flutter Debug VM service; no business network requests",
+  "device_runtime_verified": false
+}

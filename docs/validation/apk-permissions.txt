@@ -1,0 +1,4 @@
+package: cn.bingbing.day_blocks_demo
+uses-permission: name='android.permission.INTERNET'
+permission: cn.bingbing.day_blocks_demo.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION
+uses-permission: name='cn.bingbing.day_blocks_demo.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION'
