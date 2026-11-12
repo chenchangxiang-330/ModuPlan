@@ -5,6 +5,7 @@ import 'common.dart';
 import 'entry_editor.dart';
 import 'settings.dart';
 import 'templates.dart';
+import 'page_turn.dart';
 
 class HomePage extends StatefulWidget {
   final LedgerStore store;
@@ -17,7 +18,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   DateTime selected = dateOnly(DateTime.now());
   late DateTime week = monday(selected),
       month = DateTime(selected.year, selected.month);
-  int tab = 0, generation = 0;
+  int tab = 0, generation = 0, turnDirection = 1;
+  double dragDistance = 0;
   String filter = 'all';
   SettingsData settings = const SettingsData();
   DayView? day;
@@ -47,11 +49,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
 
   Future<void> reload() async {
     final seq = ++generation;
+    final requestedDate = selected, requestedWeek = week, requestedMonth = month;
     try {
       final s = await widget.store.settings(),
-          d = await widget.store.readDay(selected),
-          w = await widget.store.readWeek(week),
-          c = await widget.store.monthCounts(month);
+          d = await widget.store.readDay(requestedDate),
+          w = await widget.store.readWeek(requestedWeek),
+          c = await widget.store.monthCounts(requestedMonth);
       if (mounted && seq == generation) {
         setState(() {
           settings = s;
@@ -69,11 +72,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   void choose(DateTime d) {
     if (d.year < 1900 || d.year > 2100) return;
     setState(() {
+      turnDirection = d.isBefore(selected) ? -1 : 1;
       selected = dateOnly(d);
       week = monday(d);
       month = DateTime(d.year, d.month);
       tab = 0;
-      day = null;
     });
     reload();
   }
@@ -134,7 +137,8 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     ),
   );
   Widget schedule() {
-    final today = dateOnly(DateTime.now()), weekStart = monday(selected);
+    final shownDate = day == null ? selected : parseDate(day!.day);
+    final today = dateOnly(DateTime.now()), weekStart = monday(shownDate);
     final visible =
         day?.entries
             .where((e) => filter == 'all' || e.owner == filter)
@@ -142,16 +146,40 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         <Entry>[];
     final done = visible.where((e) => e.done).length;
     return ListView(
-      key: ValueKey('day-${dateKey(selected)}'),
+      key: ValueKey('day-${dateKey(shownDate)}'),
       children: [
         PageHeading(
           eyebrow: '三段日程 · 一段一段来',
-          title: '${selected.month}月${selected.day}日',
+          title: '${shownDate.month}月${shownDate.day}日',
           subtitle:
-              '${selected.year}年 · 星期${weekdays[selected.weekday - 1]}  /  ${dateKey(selected) == dateKey(today) ? '今天' : '所选日期'}',
+              '${shownDate.year}年 · 星期${weekdays[shownDate.weekday - 1]}  /  ${dateKey(shownDate) == dateKey(today) ? '今天' : '所选日期'}',
           trailing: TextButton(
             onPressed: () => choose(today),
             child: const Text('回到今天'),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: Row(
+            children: [
+              IconButton(
+                tooltip: '前一天',
+                onPressed: () => choose(plusDays(selected, -1)),
+                icon: const Icon(Icons.west_rounded, size: 20),
+              ),
+              const Expanded(
+                child: Text(
+                  '左右轻扫，翻过一天',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 12, color: green),
+                ),
+              ),
+              IconButton(
+                tooltip: '后一天',
+                onPressed: () => choose(plusDays(selected, 1)),
+                icon: const Icon(Icons.east_rounded, size: 20),
+              ),
+            ],
           ),
         ),
         Padding(
@@ -163,7 +191,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 tooltip: '上一周',
                 icon: const Icon(Icons.chevron_left),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 26, minHeight: 44),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 44),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(28, 44),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
               for (var i = 0; i < 7; i++)
                 Expanded(
@@ -172,7 +204,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                       final d = plusDays(weekStart, i),
                           active =
                               dateKey(plusDays(weekStart, i)) ==
-                              dateKey(selected),
+                              dateKey(shownDate),
                           isToday =
                               dateKey(plusDays(weekStart, i)) == dateKey(today);
                       return Semantics(
@@ -184,12 +216,14 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                           child: Container(
                             padding: const EdgeInsets.symmetric(vertical: 11),
                             margin: const EdgeInsets.symmetric(horizontal: 2),
-                            decoration: BoxDecoration(
-                              color: active ? green : const Color(0xfff0f1e9),
-                              borderRadius: BorderRadius.circular(14),
-                              border: isToday
-                                  ? Border.all(color: green, width: 1.5)
-                                  : null,
+                            decoration: ShapeDecoration(
+                              color: active ? green : const Color(0xffeee8db),
+                              shape: ContinuousRectangleBorder(
+                                borderRadius: BorderRadius.circular(20),
+                                side: isToday
+                                    ? const BorderSide(color: green, width: 1.5)
+                                    : BorderSide.none,
+                              ),
                             ),
                             child: Column(
                               children: [
@@ -224,7 +258,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                 tooltip: '下一周',
                 icon: const Icon(Icons.chevron_right),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 26, minHeight: 44),
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 44),
+                style: IconButton.styleFrom(
+                  minimumSize: const Size(28, 44),
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ],
           ),
@@ -295,7 +333,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
           child: Text(
             '未完成的事会留在当天，下一步由你决定。',
             textAlign: TextAlign.center,
-            style: TextStyle(fontSize: 11, color: Color(0xff889180)),
+            style: TextStyle(fontSize: 12, color: Color(0xff777363)),
           ),
         ),
       ],
@@ -391,7 +429,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         Card(
           margin: const EdgeInsets.fromLTRB(20, 0, 20, 12),
           child: InkWell(
-            borderRadius: BorderRadius.circular(20),
+            customBorder: notebookShape,
             onTap: () => choose(parseDate(d.day)),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -521,10 +559,12 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 20),
           padding: const EdgeInsets.fromLTRB(8, 16, 8, 16),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(color: const Color(0xffe6ebe1)),
+          decoration: const ShapeDecoration(
+            color: Color(0xfffffcf4),
+            shape: ContinuousRectangleBorder(
+              borderRadius: BorderRadius.all(Radius.circular(32)),
+              side: BorderSide(color: Color(0xffded6c4)),
+            ),
           ),
           child: Column(
             children: [
@@ -635,29 +675,73 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     );
   }
 
+  Widget bookContent() => switch (tab) {
+    0 => GestureDetector(
+      onHorizontalDragStart: (_) => dragDistance = 0,
+      onHorizontalDragUpdate: (details) => dragDistance += details.delta.dx,
+      onHorizontalDragEnd: (details) {
+        final velocity = details.primaryVelocity ?? 0;
+        if (dragDistance.abs() < 64 && velocity.abs() < 450) return;
+        final forward = dragDistance.abs() >= 64 ? dragDistance < 0 : velocity < 0;
+        choose(plusDays(selected, forward ? 1 : -1));
+      },
+      child: NotebookPageTurn(
+        pageKey: day?.day ?? dateKey(selected),
+        direction: turnDirection,
+        paperColor: paper,
+        child: NotebookPaper(
+          child: IgnorePointer(
+            ignoring: day != null && day!.day != dateKey(selected),
+            child: schedule(),
+          ),
+        ),
+      ),
+    ),
+    1 => NotebookPaper(child: weekPage()),
+    2 => NotebookPaper(child: monthPage()),
+    _ => NotebookPaper(
+      child: SettingsPage(store: widget.store, settings: settings),
+    ),
+  };
+
   @override
   Widget build(BuildContext context) => Scaffold(
+    backgroundColor: cover,
     body: SafeArea(
-      child: loadError != null
-          ? Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('读取失败：$loadError'),
-                    const SizedBox(height: 16),
-                    FilledButton(onPressed: reload, child: const Text('重试')),
-                  ],
-                ),
-              ),
-            )
-          : switch (tab) {
-              0 => schedule(),
-              1 => weekPage(),
-              2 => monthPage(),
-              _ => SettingsPage(store: widget.store, settings: settings),
-            },
+      bottom: false,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+        child: DecoratedBox(
+          decoration: ShapeDecoration(
+            color: paper,
+            shape: notebookShape,
+            shadows: const [
+              BoxShadow(color: Color(0x55000000), blurRadius: 12, offset: Offset(0, 3)),
+              BoxShadow(color: Color(0xffd8cebb), offset: Offset(2, 3)),
+            ],
+          ),
+          child: ClipPath(
+            clipper: const ShapeBorderClipper(shape: notebookShape),
+            child: loadError != null
+                ? NotebookPaper(
+                    child: Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text('读取失败：$loadError'),
+                            const SizedBox(height: 16),
+                            FilledButton(onPressed: reload, child: const Text('重试')),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                : bookContent(),
+          ),
+        ),
+      ),
     ),
     bottomNavigationBar: NavigationBar(
       selectedIndex: tab,

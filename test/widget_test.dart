@@ -46,7 +46,7 @@ void main() {
       expect(t.takeException(), isNull);
     }
     expect(await t.runAsync(() => store.db.query('days')), isEmpty);
-    await t.tap(find.text('添加事项').first);
+    await t.tap(find.byTooltip('添加事项').first);
     await settle(t);
     expect(find.byType(EntryEditor), findsOneWidget);
     await t.enterText(
@@ -71,6 +71,7 @@ void main() {
     addTearDown(t.view.resetDevicePixelRatio);
     await t.pumpWidget(DayBlocksApp(store: store));
     await settle(t);
+    await t.ensureVisible(find.text('添加事项').first);
     await t.tap(find.text('添加事项').first);
     await settle(t);
     await t.enterText(find.byType(TextField).first, '写论文');
@@ -141,6 +142,40 @@ void main() {
     expect(t.takeException(), isNull);
     await t.tap(find.widgetWithText(NavigationDestination, '月历'));
     await settle(t);
+    expect(t.takeException(), isNull);
+    await t.pumpWidget(const SizedBox.shrink());
+  });
+
+  testWidgets('翻页显示真实日期事项，返回保留完成状态，浏览不建立空日程', (t) async {
+    final today = dateOnly(DateTime.now());
+    final tomorrow = plusDays(today, 1);
+    final now = DateTime.now().toUtc().toIso8601String();
+    await t.runAsync(() => store.saveEntry(Entry(
+      id: newId(), day: dateKey(today), block: 0,
+      title: '今日已完成事项', owner: 'me', done: true,
+      createdAt: now, updatedAt: now,
+    )));
+    await t.runAsync(() => store.saveEntry(Entry(
+      id: newId(), day: dateKey(tomorrow), block: 0,
+      title: '明日计划', owner: 'both',
+      createdAt: now, updatedAt: now,
+    )));
+    await t.pumpWidget(DayBlocksApp(store: store));
+    await settle(t);
+    expect(find.text('今日已完成事项'), findsOneWidget);
+    await t.tap(find.byTooltip('后一天'));
+    await settle(t);
+    expect(find.text('明日计划'), findsOneWidget);
+    expect(find.text('今日已完成事项'), findsNothing);
+    await t.tap(find.byTooltip('前一天'));
+    await settle(t);
+    expect(find.text('今日已完成事项'), findsOneWidget);
+    expect(t.widget<Checkbox>(find.byType(Checkbox).first).value, isTrue);
+    await t.tap(find.byTooltip('前一天'));
+    await settle(t);
+    final previous = await t.runAsync(() => store.readDay(plusDays(today, -1)));
+    expect(previous!.established, isFalse);
+    expect(previous.entries, isEmpty);
     expect(t.takeException(), isNull);
     await t.pumpWidget(const SizedBox.shrink());
   });

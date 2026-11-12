@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import '../data/models.dart';
+export 'notebook_paper.dart';
 
-const ink = Color(0xff2f3532);
-const paper = Color(0xfffaf8f3);
-const green = Color(0xff446b5a);
+const ink = Color(0xff37382f);
+const paper = Color(0xfff8f3e7);
+const paperSurface = Color(0xfffffdf7);
+const green = Color(0xff62705a);
+const cover = Color(0xff55463c);
+const notebookLine = Color(0xffded8c8);
+const notebookShape = ContinuousRectangleBorder(
+  borderRadius: BorderRadius.all(Radius.circular(32)),
+);
+const notebookControlShape = ContinuousRectangleBorder(
+  borderRadius: BorderRadius.all(Radius.circular(20)),
+);
 const blockIcons = [
   Icons.wb_sunny_outlined,
   Icons.wb_twilight,
@@ -72,7 +82,7 @@ class PageHeading extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(20, 20, 20, 16),
+    padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -81,8 +91,8 @@ class PageHeading extends StatelessWidget {
           style: const TextStyle(
             color: green,
             fontSize: 12,
-            fontWeight: FontWeight.w700,
-            letterSpacing: 2,
+            fontWeight: FontWeight.w500,
+            letterSpacing: 1,
           ),
         ),
         const SizedBox(height: 8),
@@ -92,9 +102,11 @@ class PageHeading extends StatelessWidget {
               child: Text(
                 title,
                 style: const TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: -1,
+                  fontSize: 30,
+                  fontFamily: 'serif',
+                  fontWeight: FontWeight.w600,
+                  letterSpacing: .5,
+                  height: 1.25,
                 ),
               ),
             ),
@@ -105,7 +117,7 @@ class PageHeading extends StatelessWidget {
         Text(
           subtitle,
           style: const TextStyle(
-            color: Color(0xff66716a),
+            color: Color(0xff726e60),
             fontSize: 13,
             height: 1.5,
           ),
@@ -132,7 +144,7 @@ class TaskLine extends StatelessWidget {
     label: '${entry.title}，${entry.done ? '已完成' : '未完成'}',
     child: InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
+      customBorder: notebookControlShape,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
@@ -140,14 +152,14 @@ class TaskLine extends StatelessWidget {
           children: [
             if (onDone != null)
               SizedBox(
-                width: 40,
-                height: 40,
+                width: 48,
+                height: 48,
                 child: Checkbox(
                   value: entry.done,
                   onChanged: (v) => onDone!(v!),
                   semanticLabel: '${entry.done ? '取消完成' : '完成'} ${entry.title}',
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(6),
+                  shape: ContinuousRectangleBorder(
+                    borderRadius: BorderRadius.circular(7),
                   ),
                 ),
               )
@@ -166,7 +178,7 @@ class TaskLine extends StatelessWidget {
                       entry.title,
                       style: TextStyle(
                         fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        fontWeight: FontWeight.w500,
                         color: entry.done ? const Color(0xff67746c) : ink,
                         decoration: entry.done
                             ? TextDecoration.lineThrough
@@ -193,14 +205,16 @@ class TaskLine extends StatelessWidget {
                             horizontal: 7,
                             vertical: 3,
                           ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xfff0f1ed),
-                            borderRadius: BorderRadius.circular(6),
+                          decoration: const ShapeDecoration(
+                            color: Color(0xffecefdf),
+                            shape: ContinuousRectangleBorder(
+                              borderRadius: BorderRadius.all(Radius.circular(9)),
+                            ),
                           ),
                           child: Text(
                             settings.ownerLabel(entry.owner),
                             style: const TextStyle(
-                              fontSize: 11,
+                              fontSize: 12,
                               color: Color(0xff455c4c),
                             ),
                           ),
@@ -208,7 +222,7 @@ class TaskLine extends StatelessWidget {
                         if (entry.done)
                           const Text(
                             '已完成',
-                            style: TextStyle(fontSize: 11, color: green),
+                            style: TextStyle(fontSize: 12, color: green),
                           ),
                         if (entry.note.isNotEmpty)
                           const Icon(
@@ -258,107 +272,133 @@ class BlockCard extends StatelessWidget {
     this.emptyText,
   });
   @override
-  Widget build(BuildContext context) => Container(
-    margin: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(24),
-      border: Border.all(color: const Color(0xffe8ebe4)),
-    ),
-    child: Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Color(block.color),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(23)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: .60),
-                  borderRadius: BorderRadius.circular(14),
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+    child: Material(
+      color: Color.alphaBlend(Color(block.color).withValues(alpha: .22), paper),
+      shape: notebookShape.copyWith(
+        side: const BorderSide(color: notebookLine),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: ShapeDecoration(
+                    color: Color.alphaBlend(
+                      Color(block.color).withValues(alpha: .45),
+                      paperSurface,
+                    ),
+                    shape: notebookControlShape,
+                  ),
+                  child: Icon(blockIcons[index], color: green, size: 22),
                 ),
-                child: Icon(blockIcons[index], color: ink, size: 23),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      block.name,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: ink,
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        block.name,
+                        style: const TextStyle(
+                          fontSize: 19,
+                          fontFamily: 'serif',
+                          fontWeight: FontWeight.w600,
+                          color: ink,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      block.range,
-                      style: const TextStyle(fontSize: 12, color: ink),
-                    ),
-                  ],
+                      const SizedBox(height: 3),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 3,
+                        children: [
+                          Text(
+                            block.range,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Color(0xff726e60),
+                            ),
+                          ),
+                          Text(
+                            onDone == null
+                                ? '${entries.length} 项'
+                                : '${entries.where((e) => e.done).length} / ${entries.length}',
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: green,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                onDone == null
-                    ? '${entries.length} 项'
-                    : '${entries.where((e) => e.done).length} / ${entries.length}',
-                style: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w700,
-                  color: ink,
+                IconButton(
+                  tooltip: '添加事项',
+                  onPressed: onAdd,
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    backgroundColor: paperSurface,
+                    shape: notebookControlShape,
+                  ),
+                  icon: const Icon(Icons.add_rounded, size: 23),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          child: Column(
-            children: [
-              if (entries.isEmpty)
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(12, 22, 12, 12),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      emptyText ?? '留一点空白，安排想做的事',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xff788276),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Column(
+              children: [
+                if (entries.isEmpty)
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        emptyText ?? '留一点空白，安排想做的事',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: Color(0xff747360),
+                        ),
                       ),
                     ),
                   ),
+                for (final entry in entries)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Material(
+                      color: paperSurface,
+                      shape: notebookControlShape,
+                      clipBehavior: Clip.antiAlias,
+                      child: TaskLine(
+                        entry: entry,
+                        settings: settings,
+                        onTap: () => onEdit(entry),
+                        onDone: onDone == null ? null : (v) => onDone!(entry, v),
+                      ),
+                    ),
+                  ),
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    onPressed: onAdd,
+                    icon: const Icon(Icons.add, size: 18),
+                    label: const Text('添加事项'),
+                  ),
                 ),
-              for (var i = 0; i < entries.length; i++) ...[
-                if (i > 0) const Divider(height: 1, color: Color(0xffedf0e9)),
-                TaskLine(
-                  entry: entries[i],
-                  settings: settings,
-                  onTap: () => onEdit(entries[i]),
-                  onDone: onDone == null ? null : (v) => onDone!(entries[i], v),
-                ),
+                const SizedBox(height: 4),
               ],
-              Align(
-                alignment: Alignment.centerLeft,
-                child: TextButton.icon(
-                  onPressed: onAdd,
-                  icon: const Icon(Icons.add, size: 18),
-                  label: const Text('添加事项'),
-                ),
-              ),
-              const SizedBox(height: 4),
-            ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     ),
   );
 }
